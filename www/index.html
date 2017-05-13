@@ -15,10 +15,11 @@
           .catch(err => console.log('Error', err));
       }
     </script>-->
-
+    <link rel="stylesheet" type="text/css" href="lib/icon_font/iconfont.css">
     <link href="lib/ionic/css/ionic.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
-
+    <link href="css/common.css" rel="stylesheet">
+    <link href="css/kindcss.css" rel="stylesheet">
     <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
     <link href="css/ionic.app.css" rel="stylesheet">
     -->
@@ -39,7 +40,7 @@
     <script src="lib/ionic-datepicker-master/dist/ionic-datepicker.bundle.min.js"></script>
     <script src="lib/jquery-1.11.3.min.js"></script>
     <!-- //mazhibin-end -->
-    
+
     <script src="lib/ionic-timepicker/dist/ionic-timepicker.bundle.min.js"></script>
     <script src="lib/jquery/jquery.min.js"></script>
 
@@ -58,6 +59,8 @@
     <!-- <script src="lib/angular-socket-io/socket.min.js"></script> -->
     <!-- <script src="lib/socket.io.js"></script> -->
     <!-- 待认领的库 -->
+    <script type="text/javascript" src="lib/echarts.common.min.js"></script>
+
     <!-- 待认领的库 -->
     <!-- 待认领的库 -->
 
@@ -80,21 +83,23 @@
 
     <script src="js/directives.js"></script>
     <script src="js/filters.js"></script>
-    
+    <script src="js/icon_filter.js"></script>
+
   </head>
   <body ng-app="kidney">
     <!--
       The nav bar that will be updated as we navigate between views.
     -->
-    <ion-nav-bar class="bar-positive" align-title="center">
-      <ion-nav-back-button>
-      </ion-nav-back-button>
-    </ion-nav-bar>
+
     <!--
       The views will be rendered in the <ion-nav-view> directive below
       Templates are in the /templates folder (but you could also
       have templates inline in this html file if you'd like).
     -->
+    <ion-nav-bar class="bar-positive" align-title="center">
+      <ion-nav-back-button>
+      </ion-nav-back-button>
+    </ion-nav-bar>
     <ion-nav-view></ion-nav-view>
   </body>
 </html>

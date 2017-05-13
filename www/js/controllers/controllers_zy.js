@@ -4,7 +4,7 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
 //登录
 .controller('SignInCtrl', ['User','$scope','$timeout','$state','Storage','loginFactory','$ionicHistory','JM','$sce', function(User,$scope, $timeout,$state,Storage,loginFactory,$ionicHistory,JM,$sce) {
     $scope.barwidth="width:0%";
-    $scope.navigation_login=$sce.trustAsResourceUrl("http://121.43.107.106/member.php?mod=logging&action=logout&formhash=xxxxxx");
+    $scope.navigation_login=$sce.trustAsResourceUrl("http://121.196.221.44:69/member.php?mod=logging&action=logout&formhash=xxxxxx");
     if(Storage.get('USERNAME')!=null){
         $scope.logOn={username:Storage.get('USERNAME'),password:""};
     }
@@ -345,6 +345,18 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
     $scope.barwidth="width:0%";
     var phoneNumber=Storage.get('RegisterNO');
     var password=Storage.get('password');
+    $scope.Titles =
+    [
+        {Name:"主任医师",Type:1},
+        {Name:"副主任医师",Type:2},
+        {Name:"主治医师",Type:3},
+        {Name:"住院医师",Type:4},
+        {Name:"主任护师",Type:5},
+        {Name:"副主任护师",Type:6},
+        {Name:"主管护师",Type:7},
+        {Name:"护师",Type:8},
+        {Name:"护士",Type:9}
+    ]   
     $scope.doctor={
         userId:"",
         name:"",
@@ -423,77 +435,113 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
 
     $scope.infoSetup = function() 
     {
-        User.register({
-            'phoneNo':phoneNumber,
-            'password':password,
-            'role':'doctor'
-        })
-        .then(function(succ)
-        {
-            console.log(phoneNumber)
-            console.log(password)
-            console.log(succ)
-            Storage.set('UID',succ.userNo);
-
-            //签署协议置位0，同意协议
-            User.updateAgree({userId:Storage.get('UID'),agreement:"0"})
-            .then(function(data){
-                console.log(data);
-            },function(err){
-                console.log(err);
-            })
-
-            //填写个人信息
-            $scope.doctor.userId = Storage.get('UID')
-            Doctor.postDocBasic($scope.doctor)
-            .then(
-                function(data)
+        if ($scope.doctor.name&&$scope.doctor.province&&$scope.doctor.city&&$scope.doctor.workUnit&&$scope.doctor.department&&$scope.doctor.title&&$scope.doctor.IDNo){
+            //如果必填信息已填
+            var IDreg = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/;  //身份证号判断
+            if ($scope.doctor.IDNo!='' && IDreg.test($scope.doctor.IDNo) == false){
+                // console.log("身份证");
+                $ionicLoading.show({
+                    template: '请输入正确的身份证号',
+                    duration:1000
+                });
+            }
+            else{
+                $scope.doctor.title = $scope.doctor.title.Name
+                User.register({
+                    'phoneNo':phoneNumber,
+                    'password':password,
+                    'role':'doctor'
+                })
+                .then(function(succ)
                 {
-                    console.log(data);
-                    console.log($scope.doctor)
-                    //$scope.doctor = data.newResults;                  
-                },
-                function(err)
+                    console.log(phoneNumber)
+                    console.log(password)
+                    console.log(succ)
+                    Storage.set('UID',succ.userNo);
+
+                    //签署协议置位0，同意协议
+                    User.updateAgree({userId:Storage.get('UID'),agreement:"0"})
+                    .then(function(data){
+                        console.log(data);
+                    },function(err){
+                        console.log(err);
+                    })
+
+                    //填写个人信息
+                    $scope.doctor.userId = Storage.get('UID')
+                    Doctor.postDocBasic($scope.doctor)
+                    .then(
+                        function(data)
+                        {
+                            console.log(data);
+                            console.log($scope.doctor)
+                            //$scope.doctor = data.newResults;                  
+                        },
+                        function(err)
+                        {
+                            console.log(err)
+                        }
+                    );            
+
+                    //注册论坛
+
+                    $http({
+                        method  : 'POST',
+                        url     : 'http://121.196.221.44:69/member.php?mod=register&mobile=2&handlekey=registerform&inajax=1',
+                        params    :{
+                            'regsubmit':'yes',
+                            'formhash':'',
+                            'username':$scope.doctor.name+phoneNumber.slice(7),
+                            'password':$scope.doctor.name+phoneNumber.slice(7),
+                            'password2':$scope.doctor.name+phoneNumber.slice(7),
+                            'email':phoneNumber+'@bme319.com'
+                        },  // pass in data as strings
+                        headers : {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Accept':'application/xml, text/xml, */*'
+                        }  // set the headers so angular passing info as form data (not request payload)
+                    }).success(function(data) {
+                        // console.log(data);
+                    });
+                    $state.go('signin');
+                    Storage.set("lt",'bme319');
+
+                },function(err)
                 {
-                    console.log(err)
-                }
-            );            
-
-            //注册论坛
-
-            $http({
-                method  : 'POST',
-                url     : 'http://121.43.107.106/member.php?mod=register&mobile=2&handlekey=registerform&inajax=1',
-                params    :{
-                    'regsubmit':'yes',
-                    'formhash':'',
-                    'username':$scope.doctor.name+phoneNumber.slice(7),
-                    'password':$scope.doctor.name+phoneNumber.slice(7),
-                    'password2':$scope.doctor.name+phoneNumber.slice(7),
-                    'email':phoneNumber+'@bme319.com'
-                },  // pass in data as strings
-                headers : {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Accept':'application/xml, text/xml, */*'
-                }  // set the headers so angular passing info as form data (not request payload)
-            }).success(function(data) {
-                // console.log(data);
-            });
-            $state.go('signin');
-            Storage.set("lt",'bme319');
-
-        },function(err)
-        {
-            console.log(err)       
-        })      
+                    console.log(err)       
+                })                 
+            }                         
+        }
+        else{
+            $ionicLoading.show({
+                template: '信息填写不完整,请完善必填信息(红色*)',
+                duration:1000
+            });            
+        }
+    
     };
+
 }])
 
 //首页
-.controller('homeCtrl', ['Communication','$scope','$state','$interval','$rootScope', 'Storage','$http','$sce','$timeout','Doctor',function(Communication,$scope, $state,$interval,$rootScope,Storage,$http,$sce,$timeout,Doctor) {
+.controller('homeCtrl', ['Communication','$scope','$state','$interval','$rootScope', 'Storage','$http','$sce','$timeout','Doctor','New',function(Communication,$scope, $state,$interval,$rootScope,Storage,$http,$sce,$timeout,Doctor,New) {
     $scope.barwidth="width:0%";
-
-    console.log(Storage.get('USERNAME'));
+    console.log(Storage.get('USERNAME'));    
+    $scope.hasUnreadMessages = false;
+    var RefreshUnread;
+    var GetUnread = function(){
+        New.getNewsByReadOrNot({userId:Storage.get('UID'),readOrNot:0}).then(//
+            function(data){
+                if(data.results.length){
+                    $scope.HasUnreadMessages = true;
+                    // console.log($scope.HasUnreadMessages);
+                }
+            },function(err){
+                    console.log(err);
+            });
+    }
+    GetUnread();
+    RefreshUnread = $interval(GetUnread,2000);
     $scope.isWriting={'margin-top': '100px'};
     if(!sessionStorage.addKBEvent)
     {
@@ -519,8 +567,8 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
         function(data)
         {
             console.log(data)
-            $scope.navigation_login=$sce.trustAsResourceUrl("http://121.43.107.106/member.php?mod=logging&action=login&loginsubmit=yes&loginhash=$loginhash&mobile=2&username="+data.results.name+Storage.get('USERNAME').slice(7)+"&password="+data.results.name+Storage.get('USERNAME').slice(7));
-            $scope.navigation=$sce.trustAsResourceUrl("http://121.43.107.106/");
+            $scope.navigation_login=$sce.trustAsResourceUrl("http://121.196.221.44:69/member.php?mod=logging&action=login&loginsubmit=yes&loginhash=$loginhash&mobile=2&username="+data.results.name+Storage.get('USERNAME').slice(7)+"&password="+data.results.name+Storage.get('USERNAME').slice(7));
+            $scope.navigation=$sce.trustAsResourceUrl("http://121.196.221.44:69/");
         },
         function(err)
         {
@@ -636,10 +684,10 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
     var date1=month+"月"+day+"日";
     //var date1=new Date().format("MM月dd日");
     $scope.riqi=date1;
-
-    //获取在等待
+    
     var load = function()
     {
+        //获取已完成
         Counsel.getCounsels({
             userId:Storage.get('UID'),
             status:0
@@ -864,7 +912,6 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
 .controller('patientCtrl', ['Doctor','$scope','$state','$ionicLoading','$interval','$rootScope', 'Storage','$ionicPopover',  function(Doctor,$scope, $state,$ionicLoading,$interval,$rootScope,Storage,$ionicPopover) {
     $scope.barwidth="width:0%";
     var patients=[];
-
     $scope.params={
         isPatients:true,
         updateTime:0
@@ -1135,9 +1182,37 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
 
     // var patient = DoctorsInfo.searchdoc($stateParams.doctorId);
     // $scope.doctor = doc;
-    $scope.goback=function(){
-        $ionicHistory.goBack();
-    }
+    // $scope.goback=function(){
+    //     $ionicHistory.goBack();
+    // }
+
+    $scope.backview=$ionicHistory.viewHistory().backView
+        $scope.backstateId=null;
+        if($scope.backview!=null){
+            $scope.backstateId=$scope.backview.stateId
+            //console.log($scope.backstateId)
+            if($scope.backstateId=="tab.doing"){
+                Storage.set('backId',$scope.backstateId);
+            }else if($scope.backstateId=="tab.did"){
+                Storage.set('backId',$scope.backstateId);
+            }else if($scope.backstateId=="tab.patient"){
+                Storage.set('backId',$scope.backstateId)
+                //console.log(Storage.get('backId'))
+            }            
+        }
+        console.log(Storage.get('backId'))
+        $scope.goback = function() {           
+            var backId = Storage.get('backId')
+            console.log(backId)
+            if(backId=="tab.doing"){
+              $state.go("tab.doing")
+            }
+            else if(backId=="tab.did"){
+                $state.go('tab.did');
+            }else{
+              $state.go('tab.patient');
+            }
+        }
     $scope.gototestrecord=function(){
         $state.go('tab.TestRecord',{PatinetId:Storage.get('getpatientId')});
     }
@@ -1205,13 +1280,16 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
             function(data)
             {
                 //console.log(data)
-                $scope.Ins.count=$scope.Ins.count + 1; 
+                $scope.Ins.count=$scope.Ins.count + 1;
+                console.log(data)
+                Storage.set('MessId',data.newResults.message.messageId)
                 New.insertNews({
                     sendBy:Storage.get('UID'),
                     userId:Storage.get('getpatientId'),
                     type:5,
                     readOrNot:'0',
-                    description:'医生给您发送了一条保险消息'                    
+                    description:'医生给您发送了一条保险消息',
+                    messageId:Storage.get('MessId')                    
                 })
                 .then(
                     function(data)
@@ -1247,7 +1325,7 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
 }])
 
 //"我”页
-.controller('meCtrl', ['Doctor','$scope','$state','$interval','$rootScope', 'Storage','$http', function(Doctor,$scope, $state,$interval,$rootScope,Storage,$http) {
+.controller('meCtrl', ['Camera','Doctor','$scope','$state','$interval','$rootScope', 'Storage','$ionicPopover','$http', function(Camera,Doctor,$scope, $state,$interval,$rootScope,Storage,$ionicPopover,$http) {
   $scope.barwidth="width:0%";
    
     //$scope.userid=Storage.get('userid');
@@ -1275,6 +1353,105 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
         // groupId:$state.params.groupId
         userId:Storage.get('UID')
     }
+
+    // 上传头像的点击事件----------------------------
+    $scope.onClickCamera = function($event){
+        $scope.openPopover($event);
+    };
+    $scope.reload=function(){
+        var t=$scope.doctor.photoUrl; 
+        $scope.doctor.photoUrl=''
+        $scope.$apply(function(){
+            $scope.doctor.photoUrl=t;
+        })
+    }
+ 
+    // 上传照片并将照片读入页面-------------------------
+    var photo_upload_display = function(imgURI){
+    // 给照片的名字加上时间戳
+        var temp_photoaddress = Storage.get("UID") + "_" +  "doctor.photoUrl.jpg";
+        console.log(temp_photoaddress)
+        Camera.uploadPicture(imgURI, temp_photoaddress)
+        .then(function(res){
+            var data=angular.fromJson(res)
+            //res.path_resized
+            //图片路径
+            $scope.doctor.photoUrl="http://121.43.107.106:8052/"+String(data.path_resized)+'?'+new Date().getTime();
+            console.log($scope.doctor.photoUrl)
+            // $state.reload("tab.mine")
+            // Storage.set('doctor.photoUrlpath',$scope.doctor.photoUrl);
+            Doctor.editDoctorDetail({userId:Storage.get("UID"),photoUrl:$scope.doctor.photoUrl}).then(function(r){
+            console.log(r);
+        })
+        },function(err){
+            console.log(err);
+            reject(err);
+        })
+    };
+    //-----------------------上传头像---------------------
+    // ionicPopover functions 弹出框的预定义
+    //--------------------------------------------
+    // .fromTemplateUrl() method
+    $ionicPopover.fromTemplateUrl('my-popover.html', {
+        scope: $scope,
+        animation: 'slide-in-up'
+    }).then(function(popover) {
+        $scope.popover = popover;
+    });
+    $scope.openPopover = function($event) {
+        $scope.popover.show($event);
+    };
+    $scope.closePopover = function() {
+        $scope.popover.hide();
+    };
+    //Cleanup the popover when we're done with it!
+    $scope.$on('$destroy', function() {
+        $scope.popover.remove();
+    });
+    // Execute action on hide popover
+    $scope.$on('popover.hidden', function() {
+        // Execute action
+    });
+    // Execute action on remove popover
+    $scope.$on('popover.removed', function() {
+        // Execute action
+    });
+
+    // 相册键的点击事件---------------------------------
+    $scope.onClickCameraPhotos = function(){        
+        // console.log("选个照片"); 
+        $scope.choosePhotos();
+        $scope.closePopover();
+    };      
+    $scope.choosePhotos = function() {
+        Camera.getPictureFromPhotos('gallery').then(function(data) {
+            // data里存的是图像的地址
+            // console.log(data);
+            var imgURI = data; 
+            photo_upload_display(imgURI);
+        }, function(err) {
+            // console.err(err);
+            var imgURI = undefined;
+        });// 从相册获取照片结束
+    }; // function结束
+
+    // 照相机的点击事件----------------------------------
+    $scope.getPhoto = function() {
+        // console.log("要拍照了！");
+        $scope.takePicture();
+        $scope.closePopover();
+    };
+    $scope.isShow=true;
+    $scope.takePicture = function() {
+        Camera.getPicture('cam').then(function(data) {
+            console.log(data)
+            photo_upload_display(data);
+      }, function(err) {
+            // console.err(err);
+            var imgURI = undefined;
+        })// 照相结束
+    }; // function结束
+
 }])
 
 //"我”二维码页
@@ -1325,7 +1502,18 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
     $scope.ProvinceObject={};
     $scope.CityObject={};
     $scope.HosObject={};
-
+    $scope.Titles =
+    [
+        {Name:"主任医师",Type:1},
+        {Name:"副主任医师",Type:2},
+        {Name:"主治医师",Type:3},
+        {Name:"住院医师",Type:4},
+        {Name:"主任护师",Type:5},
+        {Name:"副主任护师",Type:6},
+        {Name:"主管护师",Type:7},
+        {Name:"护师",Type:8},
+        {Name:"护士",Type:9}
+    ]
     Doctor.getDoctorInfo({
         userId:Storage.get('UID')
     })
@@ -1345,6 +1533,7 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
     $scope.editinfo = function() {
         // $scope.ProvinceObject = $scope.doctor.province;
         // console.log("123"+$scope.ProvinceObject);
+        $scope.doctor.title = $scope.doctor.title.Name
         Doctor.editDoctorDetail($scope.doctor)
         .then(
             function(data)
@@ -1368,10 +1557,16 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
         var searchObj = function(code,array){
             if(array && array.length){
                 for (var i = 0; i < array.length; i++) {
-                    if(array[i].name == code || array[i].hospitalName == code) return array[i];
+                    if(array[i].name == code || array[i].hospitalName == code|| array[i].Name == code) return array[i];
                 };
             }
             return "未填写";           
+        }
+        //读职称
+        if ($scope.doctor.title != null){
+            console.log($scope.doctor.title)
+            console.log($scope.Titles)
+            $scope.doctor.title = searchObj($scope.doctor.title,$scope.Titles)
         } 
         //-------------点击编辑省市医院读字典表--------------
         if ($scope.doctor.province != null){
@@ -1492,105 +1687,6 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
     }
     //------------省市医院读字典表--------------------
 
-
-    // 上传头像的点击事件----------------------------
-    $scope.onClickCamera = function($event){
-        $scope.openPopover($event);
-    };
-    $scope.reload=function(){
-        var t=$scope.doctor.photoUrl; 
-        $scope.doctor.photoUrl=''
-        $scope.$apply(function(){
-            $scope.doctor.photoUrl=t;
-        })
-    }
- 
-    // 上传照片并将照片读入页面-------------------------
-    var photo_upload_display = function(imgURI){
-    // 给照片的名字加上时间戳
-        var temp_photoaddress = Storage.get("UID") + "_" +  "doctor.photoUrl.jpg";
-        console.log(temp_photoaddress)
-        Camera.uploadPicture(imgURI, temp_photoaddress)
-        .then(function(res){
-            var data=angular.fromJson(res)
-            //res.path_resized
-            //图片路径
-            $scope.doctor.photoUrl="http://121.43.107.106:8052/"+String(data.path_resized)+'?'+new Date().getTime();
-            console.log($scope.doctor.photoUrl)
-            // $state.reload("tab.mine")
-            // Storage.set('doctor.photoUrlpath',$scope.doctor.photoUrl);
-            Doctor.editDoctorDetail({userId:Storage.get("UID"),photoUrl:$scope.doctor.photoUrl}).then(function(r){
-            console.log(r);
-        })
-        },function(err){
-            console.log(err);
-            reject(err);
-        })
-    };
-    //-----------------------上传头像---------------------
-    // ionicPopover functions 弹出框的预定义
-    //--------------------------------------------
-    // .fromTemplateUrl() method
-    $ionicPopover.fromTemplateUrl('my-popover.html', {
-        scope: $scope,
-        animation: 'slide-in-up'
-    }).then(function(popover) {
-        $scope.popover = popover;
-    });
-    $scope.openPopover = function($event) {
-        $scope.popover.show($event);
-    };
-    $scope.closePopover = function() {
-        $scope.popover.hide();
-    };
-    //Cleanup the popover when we're done with it!
-    $scope.$on('$destroy', function() {
-        $scope.popover.remove();
-    });
-    // Execute action on hide popover
-    $scope.$on('popover.hidden', function() {
-        // Execute action
-    });
-    // Execute action on remove popover
-    $scope.$on('popover.removed', function() {
-        // Execute action
-    });
-
-    // 相册键的点击事件---------------------------------
-    $scope.onClickCameraPhotos = function(){        
-        // console.log("选个照片"); 
-        $scope.choosePhotos();
-        $scope.closePopover();
-    };      
-    $scope.choosePhotos = function() {
-        Camera.getPictureFromPhotos('gallery').then(function(data) {
-            // data里存的是图像的地址
-            // console.log(data);
-            var imgURI = data; 
-            photo_upload_display(imgURI);
-        }, function(err) {
-            // console.err(err);
-            var imgURI = undefined;
-        });// 从相册获取照片结束
-    }; // function结束
-
-    // 照相机的点击事件----------------------------------
-    $scope.getPhoto = function() {
-        // console.log("要拍照了！");
-        $scope.takePicture();
-        $scope.closePopover();
-    };
-    $scope.isShow=true;
-    $scope.takePicture = function() {
-        Camera.getPicture('cam').then(function(data) {
-            console.log(data)
-            photo_upload_display(data);
-      }, function(err) {
-            // console.err(err);
-            var imgURI = undefined;
-        })// 照相结束
-    }; // function结束
-
 }])
 
 //"我”个人收费页
@@ -1683,7 +1779,7 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
                 $scope.feedbacks=data.comments;
                 $scope.doctor=data.results;
                 //console.log($scope.feedbacks.length)
-                commentlength=data.comments.length;
+                //commentlength=data.comments.length;
                 //   for (var i=0; i<commentlength; i++){
                 //       commentlist[i]=$scope.feedbacks[i].pateintId.userId;
             },
@@ -1693,22 +1789,22 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
             }
         );
 
-        for (var i=0; i<commentlength; i++){
-            Patient.getPatientDetail({
-            userId:$scope.feedbacks[i].pateintId.userId
-        })
-            .then(
-                function(data)
-                {
-                // console.log(data)
-                    $scope.feedbacks[i].photoUrl=data.results.photoUrl;
-                },
-                function(err)
-                {
-                    console.log(err)
-                }
-            );
-        }
+        // for (var i=0; i<commentlength; i++){
+        //     Patient.getPatientDetail({
+        //     userId:$scope.feedbacks[i].pateintId.userId
+        // })
+        //     .then(
+        //         function(data)
+        //         {
+        //         // console.log(data)
+        //             $scope.feedbacks[i].photoUrl=data.results.photoUrl;
+        //         },
+        //         function(err)
+        //         {
+        //             console.log(err)
+        //         }
+        //     );
+        // }
     }
     $scope.$on('$ionicView.enter', function() {
         load();
@@ -1735,7 +1831,7 @@ angular.module('zy.controllers', ['ionic','kidney.services'])
         Storage.rm('PASSWORD');
         Storage.rm('userid');
         console.log($state);
-        $scope.navigation_login=$sce.trustAsResourceUrl("http://121.43.107.106/member.php?mod=logging&action=logout&formhash=xxxxxx");
+        $scope.navigation_login=$sce.trustAsResourceUrl("http://121.196.221.44:69/member.php?mod=logging&action=logout&formhash=xxxxxx");
         $timeout(function(){$state.go('signin');},500);
     };
   

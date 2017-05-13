@@ -2,7 +2,9 @@ angular.module('tdy.controllers', ['ionic','kidney.services','ionic-datepicker']
 
 /////////////////////////tongdanyang/////////////////
 .controller('DoctorDiagnoseCtrl', ['$scope', 'Storage','ionicDatePicker','Patient','$state', function ($scope, Storage,ionicDatePicker,Patient,$state) {
-  
+  $scope.BacktoPD = function(){
+    $state.go('tab.patientDetail');
+  }
   var decodeDiseases=function(type)
   {
     var dict;
@@ -210,637 +212,617 @@ angular.module('tdy.controllers', ['ionic','kidney.services','ionic-datepicker']
   }
 
 }])
-.controller('TestRecordCtrl', ['$scope', '$http','$stateParams','Storage','VitalSign', function ($scope,$http,$stateParams,Storage,VitalSign) {
-  
+//测量记录
+.controller('TestRecordCtrl', ['$state','$scope', '$http','$stateParams','Storage','VitalSign', function ($state,$scope,$http,$stateParams,Storage,VitalSign) {
+  $scope.BacktoPD = function(){
+    $state.go('tab.patientDetail');
+  }  
 
       console.log($stateParams.PatinetId)
       console.log(Storage.get("getpatientId"))
       VitalSign.getVitalSigns({userId:Storage.get("getpatientId"),type:'血压'}).then(
       function(Data){
-        $scope.ChartData=[];
+        $scope.ChartData5=[];
+        $scope.ChartData1=[];
+        $scope.ChartData2=[];
         console.log(Data.results.length)
         for(var i=0;i<Data.results.length;i++){
-          // if(Data.results[i].date>="2017-04-08"&&Data.results[i].code=="舒张压"){
-          if(Data.results[i].code=="舒张压"){
+          if(Data.results[i].code=="血压"){
             for(var j=0;j<Data.results[i].data.length;j++){
-              $scope.ChartData.push(Data.results[i].data[j])
+              if(Data.results[i].data[j].value||Data.results[i].data[j].value2){
+                $scope.ChartData5.push([new Date(new Date(Data.results[i].data[j].time)-8*3600*1000),Data.results[i].data[j].value,Data.results[i].data[j].value2])
+              }
+              if(Data.results[i].data[j].value){
+                $scope.ChartData1.push([new Date(new Date(Data.results[i].data[j].time)-8*3600*1000),Data.results[i].data[j].value])
+              }
+              if(Data.results[i].data[j].value2){
+                $scope.ChartData2.push([new Date(new Date(Data.results[i].data[j].time)-8*3600*1000),Data.results[i].data[j].value2])
+              }
+
             }
           }
         }
-        if($scope.ChartData.length==0){
-          console.log($scope.ChartData)
-          $scope.chartdiv=false;
+        if($scope.ChartData1.length||$scope.ChartData2.length){
+          
+        // $scope.chartdiv1=true;
         }else{
-          $scope.chartdiv=true;
-          AmCharts.makeChart("chartdiv", {
-            "type": "serial",
-            "theme": "light",
-            "marginTop":0,
-            "marginRight": 80,
-            "dataProvider": $scope.ChartData,
-            "valueAxes": [{
-                "axisAlpha": 0,
-                "position": "left"
-            }],
-            "graphs": [{
-                "id":"g1",
-                "balloonText": "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>",
-                "bullet": "round",
-                "bulletSize": 8,
-                "lineColor": "#d1655d",
-                "lineThickness": 2,
-                "negativeLineColor": "#637bb6",
-                // "type": "smoothedLine",
-                "valueField": "value"
-            }],
-            "chartScrollbar": {
-                "graph":"g1",
-                "gridAlpha":0,
-                "color":"#888888",
-                "scrollbarHeight":55,
-                "backgroundAlpha":0,
-                "selectedBackgroundAlpha":0.1,
-                "selectedBackgroundColor":"#888888",
-                "graphFillAlpha":0,
-                "autoGridCount":true,
-                "selectedGraphFillAlpha":0,
-                "graphLineAlpha":0.2,
-                "graphLineColor":"#c2c2c2",
-                "selectedGraphLineColor":"#888888",
-                "selectedGraphLineAlpha":1
-
-            },
-            "chartCursor": {
-                "categoryBalloonDateFormat": "YYYY-MM-DD",
-                "cursorAlpha": 0,
-                "valueLineEnabled":true,
-                "valueLineBalloonEnabled":true,
-                "valueLineAlpha":0.5,
-                "fullWidth":true
-            },
-            "dataDateFormat": "YYYY-MM-DD",
-            "categoryField": "time",
-            "categoryAxis": {
-                "minPeriod": "mm",
-                "parseDates": true,
-                "minorGridAlpha": 0.1,
-                "minorGridEnabled": true
-            },
-            "export": {
-                "enabled": true
-            }
-        });
+          console.log(222)
+          // $scope.chartdiv1=false;
         }
-        // console.log($scope.ChartData);
-        // createStockChart("chartdiv",$scope.ChartData,"舒张压","mmHg");
+        var option1 = {
+          title : {
+              text : '血压',
+              subtext : 'mmHg'
+          },
+          tooltip : {
+              trigger: 'axis'
+              // formatter : function (params) {
+              //     var date = new Date(params.value[0]);
+              //     data = date.getFullYear() + '-'
+              //            + (date.getMonth() + 1) + '-'
+              //            + date.getDate() + ' '
+              //            + date.getHours() + ':'
+              //            + date.getMinutes();
+              //     return data + '<br/>'
+              //            + params.value[1] + ', ' 
+              //            + params.value[2];
+              // }
+          },
+          dataZoom: {
+              show: true,
+              start : 50
+          },
+          legend : {
+              data : ['收缩压','舒张压']
+          },
+          grid: {
+              y2: 80
+          },
+          xAxis : [
+              {
+                  type : 'time'
+                  // splitNumber:8//分割的个数
+              }
+          ],
+          yAxis : [
+              {
+                  type : 'value',
+                  min:50,
+                  max:250
+              }
+          ],
+          //new date(axisData[i]).getFullYear()+'-'+(new date(axisData[i]).getMonth()+1)+'-'+new date(axisData[i]).getDate()+' '+new date(axisData[i]).getHours()+':'+new date(axisData[i]).getMinutes()
+          toolbox: {
+              show : true,
+              feature : {
+                  // mark : {show: true},
+                  dataView : {
+                    show: true, 
+                    readOnly: true,
+                    optionToContent: function(opt) {
+                      var axisData = $scope.ChartData5;
+                      console.log(axisData)
+                      var series = opt.series;
+                      var table = '<table style="width:100%;text-align:center"><tbody><tr>'
+                                   + '<td>时间</td>'
+                                   + '<td>' + series[0].name + '</td>'
+                                   + '<td>' + series[1].name + '</td>'
+                                   + '</tr>';
+                      for (var i = 0, l = axisData.length; i < l; i++) {
+                        var td1,td2;
+                        td1=(axisData[i][1]==undefined?"空":axisData[i][1])
+                        td2=(axisData[i][2]==undefined?"空":axisData[i][2])
+                        console.log(td1)
+                          table += '<tr>'
+                                   + '<td>' + (new Date(axisData[i][0]).getMonth()+1)+'-'+new Date(axisData[i][0]).getDate()+' '+new Date(axisData[i][0]).getHours()+':'+new Date(axisData[i][0]).getMinutes() + '</td>' //axisData[i].getFullYear()+'-'+(axisData[i].getMonth()+1)+'-'+axisData[i].getDate()+' '+axisData[i].getHours()+':'+axisData[i].getMinutes();
+                                   + '<td>' + td1 + '</td>'
+                                   + '<td>' + td2 + '</td>'
+                                   + '</tr>';
+                      }
+                      table += '</tbody></table>';
+                      return table;
+                  }
+                  },
+
+                  // magicType : {show: true, type: ['line', 'bar']},
+                  // restore : {show: true},
+                  saveAsImage : {show: true}
+              }
+          },
+          series : [
+              {
+                  name: '收缩压',
+                  type: 'line',
+                  symbol:'roundRect',
+                  symbolSize :8,
+                  // showAllSymbol: true,
+                  // symbolSize: function (value){
+                  //     return Math.round(value[2]/10) + 2;
+                  // },
+                  data: $scope.ChartData1
+              },{
+                name:'舒张压',
+                type: 'line',
+                symbol:'diamond',
+                symbolSize :8,
+                  // showAllSymbol: true,
+                  // symbolSize: function (value){
+                  //     return Math.round(value[2]/10) + 2;
+                  // },
+                  data: $scope.ChartData2
+              }
+          ]
+      };
+        var myChart = echarts.init(document.getElementById('chartdiv1'));
+        myChart.setOption(option1);
+        
       }, function(e) {  
       });
 
-      VitalSign.getVitalSigns({userId:Storage.get("getpatientId"),type:'血压'}).then(
-      function(Data){
-        $scope.ChartData=[];
-        console.log(Data.results.length)
-        for(var i=0;i<Data.results.length;i++){
-          if(Data.results[i].code=="收缩压"){
-            for(var j=0;j<Data.results[i].data.length;j++){
-              $scope.ChartData.push(Data.results[i].data[j])
-            }
-          }
-        }
-        if($scope.ChartData.length==0){
-          $scope.chartdiv1=false;
-        }else{
-          $scope.chartdiv1=true;
-          AmCharts.makeChart("chartdiv1", {
-            "type": "serial",
-            "theme": "light",
-            "marginTop":0,
-            "marginRight": 80,
-            "dataProvider": $scope.ChartData,
-            "valueAxes": [{
-                "axisAlpha": 0,
-                "position": "left"
-            }],
-            "graphs": [{
-                "id":"g1",
-                "balloonText": "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>",
-                "bullet": "round",
-                "bulletSize": 8,
-                "lineColor": "#d1655d",
-                "lineThickness": 2,
-                "negativeLineColor": "#637bb6",
-                // "type": "smoothedLine",
-                "valueField": "value"
-            }],
-            "chartScrollbar": {
-                "graph":"g1",
-                "gridAlpha":0,
-                "color":"#888888",
-                "scrollbarHeight":55,
-                "backgroundAlpha":0,
-                "selectedBackgroundAlpha":0.1,
-                "selectedBackgroundColor":"#888888",
-                "graphFillAlpha":0,
-                "autoGridCount":true,
-                "selectedGraphFillAlpha":0,
-                "graphLineAlpha":0.2,
-                "graphLineColor":"#c2c2c2",
-                "selectedGraphLineColor":"#888888",
-                "selectedGraphLineAlpha":1
-
-            },
-            "chartCursor": {
-                "categoryBalloonDateFormat": "YYYY-MM-DD",
-                "cursorAlpha": 0,
-                "valueLineEnabled":true,
-                "valueLineBalloonEnabled":true,
-                "valueLineAlpha":0.5,
-                "fullWidth":true
-            },
-            "dataDateFormat": "YYYY-MM-DD",
-            "categoryField": "time",
-            "categoryAxis": {
-                "minPeriod": "mm",
-                "parseDates": true,
-                "minorGridAlpha": 0.1,
-                "minorGridEnabled": true
-            },
-            "export": {
-                "enabled": true
-            }
-          });
-        }
-        // console.log($scope.ChartData);
-        // createStockChart("chartdiv",$scope.ChartData,"收缩压","mmHg");
-      }, function(e) {  
-      });
 
       VitalSign.getVitalSigns({userId:Storage.get("getpatientId"),type:'体温'}).then(
       function(Data){
-        $scope.ChartData=[];
+        $scope.ChartData3=[];
         console.log(Data.results.length)
         for(var i=0;i<Data.results.length;i++){
           if(Data.results[i].code=="体温"){
             for(var j=0;j<Data.results[i].data.length;j++){
-              $scope.ChartData.push(Data.results[i].data[j])
+              $scope.ChartData3.push([new Date(new Date(Data.results[i].data[j].time)-8*3600*1000),Data.results[i].data[j].value])
             }
           }
         }
-        if($scope.ChartData.length==0){
-          $scope.chartdiv2=false;
-        }else{
-          $scope.chartdiv2=true;
-          AmCharts.makeChart("chartdiv2", {
-            "type": "serial",
-            "theme": "light",
-            "marginTop":0,
-            "marginRight": 80,
-            "dataProvider": $scope.ChartData,
-            "valueAxes": [{
-                "axisAlpha": 0,
-                "position": "left"
-            }],
-            "graphs": [{
-                "id":"g1",
-                "balloonText": "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>",
-                "bullet": "round",
-                "bulletSize": 8,
-                "lineColor": "#d1655d",
-                "lineThickness": 2,
-                "negativeLineColor": "#637bb6",
-                // "type": "smoothedLine",
-                "valueField": "value"
-            }],
-            "chartScrollbar": {
-                "graph":"g1",
-                "gridAlpha":0,
-                "color":"#888888",
-                "scrollbarHeight":55,
-                "backgroundAlpha":0,
-                "selectedBackgroundAlpha":0.1,
-                "selectedBackgroundColor":"#888888",
-                "graphFillAlpha":0,
-                "autoGridCount":true,
-                "selectedGraphFillAlpha":0,
-                "graphLineAlpha":0.2,
-                "graphLineColor":"#c2c2c2",
-                "selectedGraphLineColor":"#888888",
-                "selectedGraphLineAlpha":1
 
-            },
-            "chartCursor": {
-                "categoryBalloonDateFormat": "YYYY-MM-DD",
-                "cursorAlpha": 0,
-                "valueLineEnabled":true,
-                "valueLineBalloonEnabled":true,
-                "valueLineAlpha":0.5,
-                "fullWidth":true
-            },
-            "dataDateFormat": "YYYY-MM-DD",
-            "categoryField": "time",
-            "categoryAxis": {
-                "minPeriod": "mm",
-                "parseDates": true,
-                "minorGridAlpha": 0.1,
-                "minorGridEnabled": true
-            },
-            "export": {
-                "enabled": true
-            }
-          });
+        if($scope.ChartData3.length){
+              
+          // $scope.chartdiv2=true;
+        }else{
+          // $scope.chartdiv2=false;
         }
+        var option1 = {
+              title : {
+                  text : '体温',
+                  subtext : '℃'
+              },
+              tooltip : {
+                  trigger: 'axis'
+                  // formatter : function (params) {
+                  //     var date = new Date(params.value[0]);
+                  //     data = date.getFullYear() + '-'
+                  //            + (date.getMonth() + 1) + '-'
+                  //            + date.getDate() + ' '
+                  //            + date.getHours() + ':'
+                  //            + date.getMinutes();
+                  //     return data + '<br/>'
+                  //            + params.value[1] + ', ' 
+                  //            + params.value[2];
+                  // }
+              },
+              dataZoom: {
+                  show: true
+                  // start : 50
+              },
+              legend : {
+                  data : ['体温']
+              },
+              grid: {
+                  y2: 80
+              },
+              xAxis : [
+                  {
+                      type : 'time'
+                      // splitNumber:8//分割的个数
+                  }
+              ],
+              yAxis : [
+                  {
+                      type : 'value',
+                      min:32,
+                      max:50
+                  }
+              ],
+              toolbox: {
+                  show : true,
+                  feature : {
+                      // mark : {show: true},
+                      dataView : {
+                        show: true, 
+                        readOnly: true,
+                        optionToContent: function(opt) {
+                          var axisData = $scope.ChartData3;
+                          console.log(axisData)
+                          var series = opt.series;
+                          var table = '<table style="width:100%;text-align:center"><tbody><tr>'
+                                       + '<td>时间</td>'
+                                       + '<td>' + series[0].name + '</td>'
+                                       + '</tr>';
+                          for (var i = 0, l = axisData.length; i < l; i++) {
+                              table += '<tr>'
+                                       + '<td>' + (new Date(axisData[i][0]).getMonth()+1)+'-'+new Date(axisData[i][0]).getDate()+' '+new Date(axisData[i][0]).getHours()+':'+new Date(axisData[i][0]).getMinutes() + '</td>' //axisData[i].getFullYear()+'-'+(axisData[i].getMonth()+1)+'-'+axisData[i].getDate()+' '+axisData[i].getHours()+':'+axisData[i].getMinutes();
+                                       + '<td>' + axisData[i][1] + '</td>'
+                                       + '</tr>';
+                          }
+                          table += '</tbody></table>';
+                          return table;
+                      }
+                      },
+
+                      // magicType : {show: true, type: ['line', 'bar']},
+                      // restore : {show: true},
+                      saveAsImage : {show: true}
+                  }
+              },
+              series : [
+                  {
+                      name: '体温',
+                      type: 'line',
+                      symbol:'emptyCircle',
+                      symbolSize :8,
+                      itemStyle:{
+                        normal:{
+                          color:"#ff6600"
+                        }
+                      },
+                      // showAllSymbol: true,
+                      // symbolSize: function (value){
+                      //     return Math.round(value[2]/10) + 2;
+                      // },
+                      data: $scope.ChartData3
+                  }
+              ]
+          };
+        var myChart = echarts.init(document.getElementById('chartdiv2'));
+        myChart.setOption(option1);  
+
 
       }, function(e) {  
       });
       VitalSign.getVitalSigns({userId:Storage.get("getpatientId"),type:'体重'}).then(
       function(Data){
-        $scope.ChartData=[];
+        $scope.ChartData4=[];
         console.log(Data.results.length)
         for(var i=0;i<Data.results.length;i++){
           if(Data.results[i].code=="体重"){
             for(var j=0;j<Data.results[i].data.length;j++){
-              $scope.ChartData.push(Data.results[i].data[j])
+              $scope.ChartData4.push([new Date(new Date(Data.results[i].data[j].time)-8*3600*1000),Data.results[i].data[j].value])
             }
           }
         }
-        if($scope.ChartData.length==0){
-          $scope.chartdiv3=false;
-        }else{
+        if($scope.ChartData4.length){
+              
           $scope.chartdiv3=true;
-          AmCharts.makeChart("chartdiv3", {
-            "type": "serial",
-            "theme": "light",
-            "marginTop":0,
-            "marginRight": 80,
-            "dataProvider": $scope.ChartData,
-            "valueAxes": [{
-                "axisAlpha": 0,
-                "position": "left"
-            }],
-            "graphs": [{
-                "id":"g1",
-                "balloonText": "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>",
-                "bullet": "round",
-                "bulletSize": 8,
-                "lineColor": "#d1655d",
-                "lineThickness": 2,
-                "negativeLineColor": "#637bb6",
-                // "type": "smoothedLine",
-                "valueField": "value"
-            }],
-            "chartScrollbar": {
-                "graph":"g1",
-                "gridAlpha":0,
-                "color":"#888888",
-                "scrollbarHeight":55,
-                "backgroundAlpha":0,
-                "selectedBackgroundAlpha":0.1,
-                "selectedBackgroundColor":"#888888",
-                "graphFillAlpha":0,
-                "autoGridCount":true,
-                "selectedGraphFillAlpha":0,
-                "graphLineAlpha":0.2,
-                "graphLineColor":"#c2c2c2",
-                "selectedGraphLineColor":"#888888",
-                "selectedGraphLineAlpha":1
-
-            },
-            "chartCursor": {
-                "categoryBalloonDateFormat": "YYYY-MM-DD",
-                "cursorAlpha": 0,
-                "valueLineEnabled":true,
-                "valueLineBalloonEnabled":true,
-                "valueLineAlpha":0.5,
-                "fullWidth":true
-            },
-            "dataDateFormat": "YYYY-MM-DD",
-            "categoryField": "time",
-            "categoryAxis": {
-                "minPeriod": "mm",
-                "parseDates": true,
-                "minorGridAlpha": 0.1,
-                "minorGridEnabled": true
-            },
-            "export": {
-                "enabled": true
-            }
-          });
+        }else{
+          $scope.chartdiv3=false;
         }
+        var option1 = {
+              title : {
+                  text : '体重',
+                  subtext : 'kg'
+              },
+              tooltip : {
+                  trigger: 'axis'
+                  // formatter : function (params) {
+                  //     var date = new Date(params.value[0]);
+                  //     data = date.getFullYear() + '-'
+                  //            + (date.getMonth() + 1) + '-'
+                  //            + date.getDate() + ' '
+                  //            + date.getHours() + ':'
+                  //            + date.getMinutes();
+                  //     return data + '<br/>'
+                  //            + params.value[1] + ', ' 
+                  //            + params.value[2];
+                  // }
+              },
+              dataZoom: {
+                  show: true
+                  // start : 50
+              },
+              legend : {
+                  data : ['体重']
+              },
+              grid: {
+                  y2: 80
+              },
+              xAxis : [
+                  {
+                      type : 'time'
+                      // splitNumber:8//分割的个数
+                  }
+              ],
+              yAxis : [
+                  {
+                      type : 'value',
+                      min:30
+                  }
+              ],
+              toolbox: {
+                  show : true,
+                  feature : {
+                      // mark : {show: true},
+                      dataView : {
+                        show: true, 
+                        readOnly: true,
+                        optionToContent: function(opt) {
+                          var axisData = $scope.ChartData4;
+                          console.log(axisData)
+                          var series = opt.series;
+                          var table = '<table style="width:100%;text-align:center"><tbody><tr>'
+                                       + '<td>时间</td>'
+                                       + '<td>' + series[0].name + '</td>'
+                                       + '</tr>';
+                          for (var i = 0, l = axisData.length; i < l; i++) {
+                              table += '<tr>'
+                                       + '<td>' + (new Date(axisData[i][0]).getMonth()+1)+'-'+new Date(axisData[i][0]).getDate()+' '+new Date(axisData[i][0]).getHours()+':'+new Date(axisData[i][0]).getMinutes() + '</td>' //axisData[i].getFullYear()+'-'+(axisData[i].getMonth()+1)+'-'+axisData[i].getDate()+' '+axisData[i].getHours()+':'+axisData[i].getMinutes();
+                                       + '<td>' + axisData[i][1] + '</td>'
+                                       + '</tr>';
+                          }
+                          table += '</tbody></table>';
+                          return table;
+                      }
+                      },
+
+                      // magicType : {show: true, type: ['line', 'bar']},
+                      // restore : {show: true},
+                      saveAsImage : {show: true}
+                  }
+              },
+              series : [
+                  {
+                      name: '体重',
+                      type: 'line',
+                      symbol:'circle',
+                      symbolSize :8,
+                      itemStyle:{
+                        normal:{
+                          color:"#990033"
+                        }
+                      },
+                      // showAllSymbol: true,
+                      // symbolSize: function (value){
+                      //     return Math.round(value[2]/10) + 2;
+                      // },
+                      data: $scope.ChartData4
+                  }
+              ]
+          };
+        var myChart = echarts.init(document.getElementById('chartdiv3'));
+        myChart.setOption(option1);
 
       }, function(e) {  
       });
       VitalSign.getVitalSigns({userId:Storage.get("getpatientId"),type:'尿量'}).then(
       function(Data){
-        $scope.ChartData=[];
+        $scope.ChartData5=[];
         console.log(Data.results.length)
         for(var i=0;i<Data.results.length;i++){
           if(Data.results[i].code=="尿量"){
             for(var j=0;j<Data.results[i].data.length;j++){
-              $scope.ChartData.push(Data.results[i].data[j])
+              $scope.ChartData5.push([new Date(new Date(Data.results[i].data[j].time)-8*3600*1000),Data.results[i].data[j].value])
             }
           }
         }
-        if($scope.ChartData.length==0){
-          $scope.chartdiv4=false;
+        if($scope.ChartData5.length){
+          
+          // $scope.chartdiv4=true;
         }else{
-          $scope.chartdiv4=true;
-          AmCharts.makeChart("chartdiv4", {
-            "type": "serial",
-            "theme": "light",
-            "marginTop":0,
-            "marginRight": 80,
-            "dataProvider": $scope.ChartData,
-            "valueAxes": [{
-                "axisAlpha": 0,
-                "position": "left"
-            }],
-            "graphs": [{
-                "id":"g1",
-                "balloonText": "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>",
-                "bullet": "round",
-                "bulletSize": 8,
-                "lineColor": "#d1655d",
-                "lineThickness": 2,
-                "negativeLineColor": "#637bb6",
-                // "type": "smoothedLine",
-                "valueField": "value"
-            }],
-            "chartScrollbar": {
-                "graph":"g1",
-                "gridAlpha":0,
-                "color":"#888888",
-                "scrollbarHeight":55,
-                "backgroundAlpha":0,
-                "selectedBackgroundAlpha":0.1,
-                "selectedBackgroundColor":"#888888",
-                "graphFillAlpha":0,
-                "autoGridCount":true,
-                "selectedGraphFillAlpha":0,
-                "graphLineAlpha":0.2,
-                "graphLineColor":"#c2c2c2",
-                "selectedGraphLineColor":"#888888",
-                "selectedGraphLineAlpha":1
-
-            },
-            "chartCursor": {
-                "categoryBalloonDateFormat": "YYYY-MM-DD",
-                "cursorAlpha": 0,
-                "valueLineEnabled":true,
-                "valueLineBalloonEnabled":true,
-                "valueLineAlpha":0.5,
-                "fullWidth":true
-            },
-            "dataDateFormat": "YYYY-MM-DD",
-            "categoryField": "time",
-            "categoryAxis": {
-                "minPeriod": "mm",
-                "parseDates": true,
-                "minorGridAlpha": 0.1,
-                "minorGridEnabled": true
-            },
-            "export": {
-                "enabled": true
-            }
-          });
+          // $scope.chartdiv4=false;
         }
+        var option1 = {
+          title : {
+              text : '尿量',
+              subtext : 'ml'
+          },
+          tooltip : {
+              trigger: 'axis'
+              // formatter : function (params) {
+              //     var date = new Date(params.value[0]);
+              //     data = date.getFullYear() + '-'
+              //            + (date.getMonth() + 1) + '-'
+              //            + date.getDate() + ' '
+              //            + date.getHours() + ':'
+              //            + date.getMinutes();
+              //     return data + '<br/>'
+              //            + params.value[1] + ', ' 
+              //            + params.value[2];
+              // }
+          },
+          dataZoom: {
+              show: true
+              // start : 50
+          },
+          legend : {
+              data : ['尿量']
+          },
+          grid: {
+              y2: 80
+          },
+          xAxis : [
+              {
+                  type : 'time'
+                  // splitNumber:8//分割的个数
+              }
+          ],
+          yAxis : [
+              {
+                  type : 'value',
+                  min:200
+              }
+          ],
+          toolbox: {
+              show : true,
+              feature : {
+                  // mark : {show: true},
+                  dataView : {
+                    show: true, 
+                    readOnly: true,
+                    optionToContent: function(opt) {
+                      var axisData = $scope.ChartData5;
+                      console.log(axisData)
+                      var series = opt.series;
+                      var table = '<table style="width:100%;text-align:center"><tbody><tr>'
+                                   + '<td>时间</td>'
+                                   + '<td>' + series[0].name + '</td>'
+                                   + '</tr>';
+                      for (var i = 0, l = axisData.length; i < l; i++) {
+                          table += '<tr>'
+                                   + '<td>' + (new Date(axisData[i][0]).getMonth()+1)+'-'+new Date(axisData[i][0]).getDate()+' '+new Date(axisData[i][0]).getHours()+':'+new Date(axisData[i][0]).getMinutes() + '</td>' //axisData[i].getFullYear()+'-'+(axisData[i].getMonth()+1)+'-'+axisData[i].getDate()+' '+axisData[i].getHours()+':'+axisData[i].getMinutes();
+                                   + '<td>' + axisData[i][1] + '</td>'
+                                   + '</tr>';
+                      }
+                      table += '</tbody></table>';
+                      return table;
+                  }
+                  },
+
+                  // magicType : {show: true, type: ['line', 'bar']},
+                  // restore : {show: true},
+                  saveAsImage : {show: true}
+              }
+          },
+          series : [
+              {
+                  name: '尿量',
+                  type: 'line',
+                  symbol:'emptyCircle',
+                  symbolSize :8,
+                  itemStyle:{
+                    normal:{
+                      color:"#33cccc"
+                    }
+                  },
+                  // showAllSymbol: true,
+                  // symbolSize: function (value){
+                  //     return Math.round(value[2]/10) + 2;
+                  // },
+                  data: $scope.ChartData5
+              }
+          ]
+      };
+        var myChart = echarts.init(document.getElementById('chartdiv4'));
+        myChart.setOption(option1);
 
       }, function(e) {  
       });
       VitalSign.getVitalSigns({userId:Storage.get("getpatientId"),type:'心率'}).then(
       function(Data){
-        $scope.ChartData=[];
+        $scope.ChartData6=[];
         console.log(Data.results.length)
         for(var i=0;i<Data.results.length;i++){
           if(Data.results[i].code=="心率"){
             for(var j=0;j<Data.results[i].data.length;j++){
-              $scope.ChartData.push(Data.results[i].data[j])
+              $scope.ChartData6.push([new Date(new Date(Data.results[i].data[j].time)-8*3600*1000),Data.results[i].data[j].value])
             }
           }
         }
-        if($scope.ChartData.length==0){
-          $scope.chartdiv5=false;
-        }else{
+        if($scope.ChartData6.length){
+              
           $scope.chartdiv5=true;
-          AmCharts.makeChart("chartdiv5", {
-            "type": "serial",
-            "theme": "light",
-            "marginTop":0,
-            "marginRight": 80,
-            "dataProvider": $scope.ChartData,
-            "valueAxes": [{
-                "axisAlpha": 0,
-                "position": "left"
-            }],
-            "graphs": [{
-                "id":"g1",
-                "balloonText": "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>",
-                "bullet": "round",
-                "bulletSize": 8,
-                "lineColor": "#d1655d",
-                "lineThickness": 2,
-                "negativeLineColor": "#637bb6",
-                // "type": "smoothedLine",
-                "valueField": "value"
-            }],
-            "chartScrollbar": {
-                "graph":"g1",
-                "gridAlpha":0,
-                "color":"#888888",
-                "scrollbarHeight":55,
-                "backgroundAlpha":0,
-                "selectedBackgroundAlpha":0.1,
-                "selectedBackgroundColor":"#888888",
-                "graphFillAlpha":0,
-                "autoGridCount":true,
-                "selectedGraphFillAlpha":0,
-                "graphLineAlpha":0.2,
-                "graphLineColor":"#c2c2c2",
-                "selectedGraphLineColor":"#888888",
-                "selectedGraphLineAlpha":1
-
-            },
-            "chartCursor": {
-                "categoryBalloonDateFormat": "YYYY-MM-DD",
-                "cursorAlpha": 0,
-                "valueLineEnabled":true,
-                "valueLineBalloonEnabled":true,
-                "valueLineAlpha":0.5,
-                "fullWidth":true
-            },
-            "dataDateFormat": "YYYY-MM-DD",
-            "categoryField": "time",
-            "categoryAxis": {
-                "minPeriod": "mm",
-                "parseDates": true,
-                "minorGridAlpha": 0.1,
-                "minorGridEnabled": true
-            },
-            "export": {
-                "enabled": true
-            }
-          });
+        }else{
+          $scope.chartdiv5=false;
         }
+        var option1 = {
+              title : {
+                  text : '心率',
+                  subtext : '次/分钟'
+              },
+              tooltip : {
+                  trigger: 'axis'
+                  // formatter : function (params) {
+                  //     var date = new Date(params.value[0]);
+                  //     data = date.getFullYear() + '-'
+                  //            + (date.getMonth() + 1) + '-'
+                  //            + date.getDate() + ' '
+                  //            + date.getHours() + ':'
+                  //            + date.getMinutes();
+                  //     return data + '<br/>'
+                  //            + params.value[1] + ', ' 
+                  //            + params.value[2];
+                  // }
+              },
+              dataZoom: {
+                  show: true
+                  // start : 50
+              },
+              legend : {
+                  data : ['心率']
+              },
+              grid: {
+                  y2: 80
+              },
+              xAxis : [
+                  {
+                      type : 'time'
+                      // splitNumber:8//分割的个数
+                  }
+              ],
+              yAxis : [
+                  {
+                      type : 'value',
+                      min:30
+                  }
+              ],
+              toolbox: {
+                  show : true,
+                  feature : {
+                      // mark : {show: true},
+                      dataView : {
+                        show: true, 
+                        readOnly: true,
+                        optionToContent: function(opt) {
+                          var axisData = $scope.ChartData6;
+                          console.log(axisData)
+                          var series = opt.series;
+                          var table = '<table style="width:100%;text-align:center"><tbody><tr>'
+                                       + '<td>时间</td>'
+                                       + '<td>' + series[0].name + '</td>'
+                                       + '</tr>';
+                          for (var i = 0, l = axisData.length; i < l; i++) {
+                              table += '<tr>'
+                                       + '<td>' + (new Date(axisData[i][0]).getMonth()+1)+'-'+new Date(axisData[i][0]).getDate()+' '+new Date(axisData[i][0]).getHours()+':'+new Date(axisData[i][0]).getMinutes() + '</td>' //axisData[i].getFullYear()+'-'+(axisData[i].getMonth()+1)+'-'+axisData[i].getDate()+' '+axisData[i].getHours()+':'+axisData[i].getMinutes();
+                                       + '<td>' + axisData[i][1] + '</td>'
+                                       + '</tr>';
+                          }
+                          table += '</tbody></table>';
+                          return table;
+                      }
+                      },
+
+                      // magicType : {show: true, type: ['line', 'bar']},
+                      // restore : {show: true},
+                      saveAsImage : {show: true}
+                  }
+              },
+              series : [
+                  {
+                      name: '心率',
+                      type: 'line',
+                      symbol:'Circle',
+                      symbolSize :8,
+                      itemStyle:{
+                        normal:{
+                          color:"#cc0033"
+                        }
+                      },
+                      // showAllSymbol: true,
+                      // symbolSize: function (value){
+                      //     return Math.round(value[2]/10) + 2;
+                      // },
+                      data: $scope.ChartData6
+                  }
+              ]
+          };
+        var myChart = echarts.init(document.getElementById('chartdiv5'));
+        myChart.setOption(option1);
 
       }, function(e) {  
       });
-  // $scope.$on('$ionicView.afterEnter', function() {  
 
-//                 console.log('afterEnter');  
-
-// }, false);  
- // console.log("mmb");
- //  $scope.$on('$ionicView.enter', function() 
- //  {
- //    console.log("mmb");
-     // $http.get("../data/pressure.json").success(function(data) {
-     //     $scope.pressuredata = data;
-     //     console.log($scope.pressuredata)
-     //     createStockChart($scope.pressuredata,"血压","mmHg");
-     // });
-  // })
-
-  // $scope.title="血压"
-  // $scope.unit="mmHg"
-  // $scope.chart = createStockChart($scope.data1,$scope.title,$scope.unit);
-  ////提振参数选择下拉框选项 默认收缩压selected
-  //下拉选择不同体征类型
-  // $scope.options = [{"SignName":"血压"},
-  //   {"SignName":"体重"},
-  //   {"SignName":"体温"},
-  //   {"SignName":"尿量"},
-  //   {"SignName":"心率"}
-  // ];  
-  // $scope.vitalInfo=$scope.options[0].SignName
-
-  // //切换体征
-  // $scope.changeVitalInfo = function(option) 
-  //   {
-  //      $scope.selectedname=option;
-  //      console.log($scope.selectedname)
-  //      drawcharts($scope.selectedname);
-  //   };
-  //   //根据体征类型画图
-  //   var drawcharts=function(param){
-  //   if (param=="血压") {
-  //     VitalSign.getVitalSigns({userId:'zxftest001',type:'type1'}).then(
-  //     function(Data){
-  //       $scope.ChartData=[];
-  //       console.log(Data.results[0])
-  //       console.log(Data.results.length)
-  //       for(var i=0;i<Data.results.length;i++){
-  //         if(Data.results[i].date>="2017-04-07"){
-  //           for(var j=0;j<Data.results[i].data.length;j++){
-  //             $scope.ChartData.push(Data.results[i].data[j])
-  //           }
-  //         }
-  //       }
-
-  //       console.log($scope.ChartData);
-  //       createStockChart($scope.ChartData,"舒张压","mmHg");
-  //     }, function(e) {  
-  //     });
-      
-      
-  //   }
-  //   if(param=="体温"){
-  //     VitalSign.getVitalSigns({userId:'zxftest001',type:'type2'}).then(
-  //     function(Data){
-  //       $scope.ChartData=[];
-  //       console.log(Data.results[0])
-  //       console.log(Data.results.length)
-  //       for(var i=0;i<Data.results.length;i++){
-  //         if(Data.results[i].date>="2017-04-07"){
-  //           for(var j=0;j<Data.results[i].data.length;j++){
-  //             $scope.ChartData.push(Data.results[i].data[j])
-  //           }
-  //         }
-  //       }
-
-  //       console.log($scope.ChartData);
-  //       createStockChart($scope.ChartData,"舒张压","mmHg");
-  //     }, function(e) {  
-  //     });
-      
-  //   }
-  // }
-  //传参绘图
-  function createStockChart(chartname,ChartData,title,unit) {
-
-    chart="";
-    var chart = AmCharts.makeChart("chartname", {
-    "type": "serial",
-    "theme": "light",
-    "marginTop":0,
-    "marginRight": 80,
-    "dataProvider": ChartData,
-    "valueAxes": [{
-        "axisAlpha": 0,
-        "position": "left"
-    }],
-    "graphs": [{
-        "id":"g1",
-        "balloonText": "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>",
-        "bullet": "round",
-        "bulletSize": 8,
-        "lineColor": "#d1655d",
-        "lineThickness": 2,
-        "negativeLineColor": "#637bb6",
-        "type": "smoothedLine",
-        "valueField": "value"
-    }],
-    "chartScrollbar": {
-        "graph":"g1",
-        "gridAlpha":0,
-        "color":"#888888",
-        "scrollbarHeight":55,
-        "backgroundAlpha":0,
-        "selectedBackgroundAlpha":0.1,
-        "selectedBackgroundColor":"#888888",
-        "graphFillAlpha":0,
-        "autoGridCount":true,
-        "selectedGraphFillAlpha":0,
-        "graphLineAlpha":0.2,
-        "graphLineColor":"#c2c2c2",
-        "selectedGraphLineColor":"#888888",
-        "selectedGraphLineAlpha":1
-
-    },
-    "chartCursor": {
-        "categoryBalloonDateFormat": "YYYY-MM-DD",
-        "cursorAlpha": 0,
-        "valueLineEnabled":true,
-        "valueLineBalloonEnabled":true,
-        "valueLineAlpha":0.5,
-        "fullWidth":true
-    },
-    "dataDateFormat": "YYYY-MM-DD",
-    "categoryField": "time",
-    "categoryAxis": {
-        "minPeriod": "mm",
-        "parseDates": true,
-        "minorGridAlpha": 0.1,
-        "minorGridEnabled": true
-    },
-    "export": {
-        "enabled": true
-    }
-});
-
-
-  // chart.addListener("rendered", zoomChart);
-  // if(chart.zoomChart){
-  //   chart.zoomChart();
-  // }
-
-  // function zoomChart(){
-  //     chart.zoomToIndexes(Math.round(chart.dataProvider.length * 0.4), Math.round(chart.dataProvider.length * 0.55));
-  // }
-  }
   
 }])
-
 //任务设置--GL
 .controller('TaskSetCtrl', ['$scope', '$state', '$ionicPopup', 'Storage', 'Task', function ($scope, $state, $ionicPopup, Storage, Task) {
+  $scope.BacktoPD = function(){
+    $state.go('tab.patientDetail');
+  }
   //初始化
    var UserId = Storage.get('getpatientId'); 
    //UserId = "Test12";
@@ -1070,8 +1052,11 @@ angular.module('tdy.controllers', ['ionic','kidney.services','ionic-datepicker']
 
 
 //健康信息--PXY
-.controller('HealthInfoCtrl', ['$scope','$timeout','$state','$ionicHistory','$ionicPopup','Storage','Health','Dict',function($scope, $timeout,$state,$ionicHistory,$ionicPopup,Storage,Health,Dict) {
+.controller('HealthInfoCtrl', ['$state','$scope','$timeout','$state','$ionicHistory','$ionicPopup','Storage','Health','Dict',function($state,$scope, $timeout,$state,$ionicHistory,$ionicPopup,Storage,Health,Dict) {
   $scope.barwidth="width:0%";
+  $scope.BacktoPD = function(){
+    $state.go('tab.patientDetail');
+  }
   var patientId = Storage.get('getpatientId')
   //console.log(Storage.get('getpatientId'))
   // var patientId = 'U201702071766'  //测试ID
@@ -1603,118 +1588,148 @@ angular.module('tdy.controllers', ['ionic','kidney.services','ionic-datepicker']
 
   
 }])
-//消息中心--PXY
-.controller('messageCtrl', ['$scope','$state','$ionicHistory','Dict','Message','Storage',function($scope, $state,$ionicHistory,Dict,Message,Storage) {
+//消息中心--ZY
+.controller('messageCtrl', ['$ionicPopup','$q','$scope','$state','$ionicHistory','New','Storage','Doctor','Patient','Communication','Counsel',function($ionicPopup,$q,$scope, $state,$ionicHistory,New,Storage,Doctor,Patient,Communication,Counsel) {
     $scope.barwidth="width:0%";
-    //get all message types
-    Dict.typeOne({category:'MessageType'})
-    .then(function(data)
-    {
-        // console.log(data.results.details)
-        var messages={};
-        angular.forEach(data.results.details,function(value,key)
-        {
-            // console.log(value)
-            messages[value.inputCode]={name:value.name,code:value.code,values:[]};
-        })
-        // console.log(messages)
-        Message.getMessages({userId:'U201704120001',type:""})//Storage.get('UID')
-        .then(function(data)
-        {
-            // console.log(data)
-            angular.forEach(data.results,function(value,key)
-            {
-                // console.log(value)
-                if(value.type==1)//支付消息
-                {
-                    messages.ZF.values.push(value)
+    var getPatNamePhoto = function(sender,patient){
+        Patient.getPatientDetail({userId:sender}).then(
+            function(data){
+                if(data.results){
+                    patient.patName = data.results.name;
+                    patient.patPhoto = data.results.photoUrl;
+                }                        
+            },function(err){
+                console.log(err);
+            });
+    }   
+
+    var getDocNamePhoto = function(sender,doctor){
+        Doctor.getDoctorInfo({userId:sender}).then(
+            function(data){
+                if(data.results){
+                    doctor.docName = data.results.name;
+                    doctor.docPhoto = data.results.photoUrl;
+                }                        
+            },function(err){
+                console.log(err);
+            });
+            // return doctor;
+    }
+
+    var getTeamNamePhoto = function(sender,team){
+        Communication.getTeam({teamId:sender}).then(
+            function(data){
+                if(data.results){
+                    team.teamName = data.results.name;
+                    team.teamPhoto = data.results.photoUrl;
+                }                        
+            },function(err){
+                console.log(err);
+            });
+            // return doctor;
+    }
+
+    var Lastnews = function(){
+        var receiver = Storage.get('UID');
+        // News.getNews({userId:receiver,type:1}).then(
+        //     function(data){
+        //         if(data.results.length){
+        //             console.log(data.results);
+        //             $scope.pay = data.results[0];
+        //         }
+                
+        //     },function(err){
+        //         console.log(err);
+        //     }
+        // );
+        //type11患者-医生；12医生-医生；13团队-医生
+        New.getNewsByReadOrNot({userId:receiver,type:11,readOrNot:0}).then(
+            function(data){
+                if(data.results.length){                    
+                    for(var x in data.results){
+                        getPatNamePhoto(data.results[x].sendBy,data.results[x]);
+                    }
                 }
-                else if(value.type==2)//警报消息
-                {
-                    messages.JB.values.push(value)
+                $scope.Pchats=data.results;               
+            },function(err){
+                console.log(err);
+            }
+        );
+
+        New.getNewsByReadOrNot({userId:receiver,type:12,readOrNot:0}).then(
+            function(data){
+                if(data.results.length){                    
+                    for(var x in data.results){
+                        getDocNamePhoto(data.results[x].sendBy,data.results[x]);
+                    }
                 }
-                else if(value.type==3)//任务消息
-                {   
-                    messages.RW.values.push(value)
+                $scope.Dchats=data.results;               
+            },function(err){
+                console.log(err);
+            }
+        );
+
+        New.getNewsByReadOrNot({userId:receiver,type:13,readOrNot:0}).then(
+            function(data){
+                if(data.results.length){                   
+                    for(var x in data.results){
+                        getTeamNamePhoto(data.results[x].sendBy,data.results[x]);
+                    }
                 }
-                else if(value.type==4)//聊天消息
-                {
-                    messages.LT.values.push(value)
-                }
-                else if(value.type==5)//保险消息
-                {
-                    messages.BX.values.push(value)
-                }
-            })
-            console.log(messages)
-            Storage.set("allMessages",angular.toJson(messages));
-            $scope.messages=messages;
-        },function(err)
-        {
-            console.log(err)
-        })
-    },function(err)
-    {
-        console.log(err)
+                $scope.Tchats=data.results;               
+            },function(err){
+                console.log(err);
+            }
+        );
+    }
+     $scope.$on('$ionicView.enter', function() {
+        Lastnews();
     })
 
-  $scope.Goback = function(){
-    $ionicHistory.goBack();
-  }
-
-    $scope.getMessageDetail = function(type){
-        Storage.set("getMessageType",type);
-        $state.go('messagesDetail');
+    $scope.do_refresher = function(){
+        Lastnews();
+        $scope.$broadcast("scroll.refreshComplete");
     }
-  //查询余额等等。。。。。
-  // $scope.messages =[
-  // {
-  //   img:"img/default_user.png",
-  //   name:"支付消息",
-  //   type:1,
-  //   time:"2017/04/01",
-  //   response:"恭喜你！成功充值50元，交易账号为0093842345."
-  // },
-  // {
-  //   img:"img/default_user.png",
-  //   name:"任务消息",
-  //   type:2,
-  //   time:"2017/03/21",
-  //   response:"今天还没有测量血压，请及时完成！"
 
-  // },
-  // {
-  //   img:"img/default_user.png",
-  //   name:"警报消息",
-  //   type:3,
-  //   time:"2017/03/11",
-  //   response:"你的血压值已超出控制范围！"
+    $scope.Goback = function(){
+      $ionicHistory.goBack();
+    }
 
-  // }]
+    //患者-医生  获取咨询状态 [status]：1进行中；0已完成  进入聊天：[type]:1=进行中;0=已结束;
+    $scope.getPChatDetail = function(Pchat) {
+        var patientId = Pchat.sendBy;
+        Counsel.getStatus({doctorId:Storage.get('UID'),patientId:patientId})
+        .then(function(data){
+            Storage.set('consultId',data.result.consultId)
+            if(data.result.status==1){
+                $state.go("tab.detail",{chatId:patientId,type:1,consultId:Storage.get('consultId')});
+            }
+            else if(data.result.status==0){
+                $state.go("tab.detail",{chatId:patientId,type:0,consultId:Storage.get('consultId')});
+            }
+        })
+    }
 
+    //医生-医生 进入聊天：type：2
+    $scope.getDChatDetail = function(Dchat) {
+        console.log(Dchat.sendBy)
+        $state.go("tab.detail",{chatId:Dchat.sendBy,type:2,consultId:'DoctorChat'});
+    }
 
-  // $scope.consults =[
-  // {
-  //   img:"img/default_user.png",
-  //   name:"李芳",
-  //   time:"2017/03/04",
-  //   response:"您好,糖尿病患者出现肾病的,一般会出现低蛋白血症.低蛋白血症患者一般会出现浮肿.治疗浮肿时就需要适当的补充蛋白,但我们一般提倡使用优质蛋白,我不知道您的蛋白粉是不是植物蛋白,所以您还是慎重一点好."
-
-  // },
-  // {
-  //   img:"img/default_user.png",
-  //   name:"张三",
-  //   time:"2017/03/01",
-  //   response:"糖尿病肾损害的发生发展分5期.Ⅰ期,为糖尿病初期,肾体积增大,肾小球滤过滤增高,肾小球入球小动脉扩张,肾小球内压升高.Ⅱ期,肾小球毛细血管基底膜增厚,尿白蛋白排泄率多正常,或间歇性升高。"
-
-  // }
-  
-
-  // ]
-    
-
-  
+    //团队-医生  获取交流状态 [status]：1进行中；0已完成  进入聊天：[type]:1=进行中;2=已结束;
+    $scope.getTChatDetail = function(Tchat) {
+        var msg = JSON.parse(Tchat.url)
+        var teamId = msg.teamId
+        var groupId = msg.targetId
+        Communication.getConsultation({consultationId:msg.targetId})
+        .then(function(data){
+            Storage.set('consultId',data.result.consultId)
+            if(data.result.status==1){
+                $state.go("tab.group-chat",{type:1,teamId:teamId,groupId:groupId});
+            }
+            else if(data.result.status==0){
+                $state.go("tab.detail",{type:2,teamId:teamId,groupId:groupId});
+            }
+        })
+    }
 }])
-// .controller('groupQRCodeCtrl', ['$scope', 'Storage', function ($scope, Storage) {
-//   $scope.groupQRCodedata = "www.baidu.com"
-// }])

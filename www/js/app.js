@@ -13,7 +13,8 @@ angular.module('kidney',[
     'kidney.filters',
     'kidney.directives',
     'monospaced.qrcode',
-    'ionic-datepicker'
+    'ionic-datepicker',
+    'kidney.icon_filter'
 ])
 
 .run(['$ionicPlatform', '$state', 'Storage', 'JM','$rootScope','CONFIG','Communication', function($ionicPlatform, $state, Storage, JM,$rootScope,CONFIG,Communication) {
@@ -193,6 +194,7 @@ angular.module('kidney',[
             //    info:
             //    docId:
             //    counseltype:1或2
+            //    counselId:
             //}
             //显示通知栏消息
             document.addEventListener('jmessage.onReceiveCustomMessage', function(msg) {
@@ -397,16 +399,16 @@ angular.module('kidney',[
         },
         params:{counselId:null}
     })
-    .state('tab.consult-detail', {
-        // cache: false,
-        url: '/consult/detail/:consultId',
-        views: {
-            'tab-consult':{
-                controller: 'consultDetailCtrl',
-                templateUrl: 'partials/consult/consult-detail.html'
-            }
-        }
-    })
+    // .state('tab.consult-detail', {
+    //     // cache: false,
+    //     url: '/consult/detail/:consultId',
+    //     views: {
+    //         'tab-consult':{
+    //             controller: 'consultDetailCtrl',
+    //             templateUrl: 'partials/consult/consult-detail.html'
+    //         }
+    //     }
+    // })
     .state('tab.selectDoc', {
         // cache: false,
         url: '/selectdoc',
