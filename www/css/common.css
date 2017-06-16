@@ -160,7 +160,7 @@
   padding: 0;
 }
 /*弹窗*/
-.popup-container .popup{
+/*.popup-container .popup{
   width: 80%;
 }
 .popup-head{
@@ -178,7 +178,7 @@
 }
 .popup-container textarea{
   padding:15px;
-}
+}*/
 /*图片居中*/
 .img-cen{
   table-layout: fixed;
@@ -189,4 +189,8 @@
 /*患者也没筛选框*/
 .top16{
   top:16px
+}
+
+.right15{
+  right: 15px
 }
